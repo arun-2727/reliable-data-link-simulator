@@ -1,51 +1,47 @@
-# Reliable Data Link Transmission Simulator Using Framing and CRC
+# Interactive Data Link Layer Framing Simulator
 
-A Computer Networks CBP project that demonstrates data-link framing, CRC-8 error detection, simulated transmission errors, and receiver-side frame validation.
+A Computer Networks CBP project that demonstrates byte/special-character restoration and bit stuffing with readable, step-by-step output.
 
 ## Features
-- Byte stuffing and bit stuffing
-- CRC-8 using polynomial `0x07` (`x^8 + x^2 + x + 1`)
-- Configurable payload size per frame
-- Optional deterministic bit-error injection into the first frame's data+CRC codeword
-- Frame-by-frame sender/receiver inspection
-- Summary metrics and receiver output
+- Choose byte/special-character mode or bit stuffing
+- Display the flag used by each method (`@` for the custom byte-mode demonstration and `01111110` for bit stuffing)
+- Show intermediate results as readable text or binary, not hex by default
+- Show character/bit-level operations
+- Restore the original message and verify the round trip
+- Optional hexadecimal view for byte-level debugging
 - Automated tests using pytest
+
+## Important note about the byte-mode demonstration
+To match the instructor's example, the app demonstrates `hello@world` becoming `helloworld` as the intermediate payload, then restoring `hello@world` at the receiver. It records the omitted `@` character's original position as restoration metadata. The receiver needs that metadata because `helloworld` alone does not reveal where an `@` was removed.
+
+This remove-and-restore approach is a **custom educational reversible scheme**, not conventional byte stuffing. Conventional byte stuffing typically escapes a reserved byte rather than removing it.
+
+## Bit stuffing
+The bit-stuffing mode uses the HDLC-style flag `01111110`. It inserts a `0` after every five consecutive `1` bits in the data body, and the receiver removes the inserted zeros.
 
 ## Requirements
 Python 3.10 or newer is recommended.
 
 ## Setup (Windows PowerShell)
 ```powershell
-cd reliable-data-link-simulator
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
+py -m pip install -r requirements.txt
 ```
 
 ## Run the dashboard
 ```powershell
-streamlit run app.py
+py -m streamlit run app.py
 ```
-Streamlit will print a local URL, typically `http://localhost:8501`.
 
 ## Run tests
 ```powershell
-python -m pytest -q
+py -m pytest -q
 ```
 
-## How to demo
-1. Enter `HELLO NETWORK` and keep error injection disabled.
-2. Transmit and show all frames pass CRC.
-3. Enable error injection and flip bit index `0`.
-4. Transmit again and show the first frame fails CRC while intact frames pass.
-5. Switch between byte stuffing and bit stuffing and compare the framed wire representation.
-6. Change payload bytes per frame to show how the message is segmented.
+## Demo suggestions
+- Byte mode: enter `hello@world`; expected intermediate payload is `helloworld`, with `@` at position `5` recorded for restoration.
+- Bit mode: enter a message and inspect the binary representation, stuffed bits, flags, and receiver output.
 
-## Important implementation note
-For a safe, easy-to-understand demonstration, this version applies the injected bit flip to the data+CRC codeword before the framing encoder runs. This preserves frame delimiters and isolates CRC error detection from framing-boundary corruption. A real physical channel usually corrupts the serialized framed bitstream; that is a useful future extension.
-
-## Limitations
-- CRC is error detection, not error correction.
-- CRC cannot detect every possible multi-bit corruption pattern.
-- The summary's accepted frame rate is the fraction of frames passing CRC, not a real network throughput measurement.
-- UTF-8 characters may occupy multiple bytes; frame size is measured in bytes.
+## Scope
+This is a software simulation. It does not transmit data over a real network and does not implement CRC.
